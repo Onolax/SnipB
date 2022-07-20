@@ -1,26 +1,45 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
 	"net/http"
+	"os"
 )
+
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
 
 func main() {
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	//used a flag and stored in value in addr and parsed it so that it can be altered during runtime
+	addr := flag.String("addr", ":4000", "HTTP network address")
+	flag.Parse()
 
-	fileServer := http.FileServer(http.Dir("./ui/static"))
+	//made two different logger for different situations
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	err := http.ListenAndServe(":4000", mux)
-	if err != nil {
-		log.Fatal(err)
+	//made the pointer so that the router can use handler with application methods
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
 	}
-	fmt.Println()
+
+	// used the http.Server so that it uses our new error logger
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		//used the routes method from routes.go
+		Handler: app.routes(),
+	}
+	infoLog.Printf("Starting server on %s", *addr)
+	err := srv.ListenAndServe()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 
 }

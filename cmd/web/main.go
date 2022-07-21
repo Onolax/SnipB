@@ -1,7 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"github.com/Onolax/SnipB/pkg/models/mysql"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"
@@ -10,12 +13,15 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	snippets *mysql.SnippetModel
 }
 
 func main() {
 
 	//used a flag and stored in value in addr and parsed it so that it can be altered during runtime
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	//flag for MySQL
+	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data")
 	flag.Parse()
 
 	//made two different logger for different situations
@@ -23,10 +29,18 @@ func main() {
 
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	defer db.Close()
+
 	//made the pointer so that the router can use handler with application methods
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		snippets: &mysql.SnippetModel{DB: db},
 	}
 
 	// used the http.Server so that it uses our new error logger
@@ -37,9 +51,20 @@ func main() {
 		Handler: app.routes(),
 	}
 	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		errorLog.Fatal(err)
 	}
 
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }

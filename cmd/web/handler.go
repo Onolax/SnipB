@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Onolax/SnipB/pkg/forms"
 	"github.com/Onolax/SnipB/pkg/models"
 	"net/http"
 	"strconv"
@@ -47,16 +48,32 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create a new snippet..."))
+	app.render(w, r, "create.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji"
-	expires := "7"
+	//Parses the form POST request into r.PostForm map
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	//made a new form struct filled with POST data then validation check
+	form := forms.New(r.PostForm)
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermittedValues("expires", "365", "7", "1")
+	//checking if any error, if any then return the user to creation screen with errors
+	if !form.Valid() {
+		app.render(w, r, "create.page.tmpl", &templateData{Form: form})
+		return
+	}
+
+	//creating a new snippet data in our database using the form map
+	id, err := app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
 	if err != nil {
 		app.serverError(w, err)
 		return

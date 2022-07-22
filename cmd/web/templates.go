@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Onolax/SnipB/pkg/forms"
 	"github.com/Onolax/SnipB/pkg/models"
 	"html/template"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 //struct to hold all the dynamic data we pass to html templates
 type templateData struct {
+	Form        *forms.Form
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet

@@ -21,11 +21,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	for _, snippet := range s {
-		fmt.Fprintf(w, "%v\n", snippet)
-	}
 
-	//byte slice containing all the required files so that we can easily access them
+	app.render(w, r, "home.page.tmpl", &templateData{
+		Snippets: s,
+	})
+
+	//data := &templateData{Snippets: s}
+
+	////byte slice containing all the required files so that we can easily access them
 	//files := []string{
 	//	"./ui/html/home.page.tmpl",
 	//	"./ui/html/base.layout.tmpl",
@@ -39,7 +42,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	//}
 	//
 	//// Executing the template file
-	//err = ts.Execute(w, nil)
+	//err = ts.Execute(w, data)
 	//if err != nil {
 	//	app.serverError(w, err)
 	//}
@@ -64,7 +67,29 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%v", s)
+	app.render(w, r, "show.page.tmpl", &templateData{
+		Snippet: s,
+	})
+
+	//storage of templateData struct to hold the snippet data
+	//data := &templateData{Snippet: s}
+	//
+	////slice of html files
+	//files := []string{
+	//	"./ui/html/show.page.tmpl",
+	//	"./ui/html/base.layout.tmpl",
+	//	"./ui/html/footer.partial.tmpl",
+	//}
+	////Parse the files
+	//ts, err := template.ParseFiles(files...)
+	//if err != nil {
+	//	app.serverError(w, err)
+	//}
+	////executing them using snippet data
+	//err = ts.Execute(w, data)
+	//if err != nil {
+	//	app.serverError(w, err)
+	//}
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {

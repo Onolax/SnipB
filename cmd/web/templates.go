@@ -52,8 +52,7 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Add the template set to the cache, using the name of the page
-		// (like 'home.page.tmpl') as the key.
+		//template set to the cache using the name of the page
 		cache[name] = ts
 	}
 	// Return the map.

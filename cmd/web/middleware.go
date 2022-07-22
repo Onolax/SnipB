@@ -7,6 +7,7 @@ import (
 
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//Don't actually understand what these headers are
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("X-Frame-Options", "deny")
 		next.ServeHTTP(w, r)
@@ -32,7 +33,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 				w.Header().Set("Connection", "close")
 				app.serverError(w, fmt.Errorf("%s", err))
 			}
-		}()
+		}() //why is bracket needed here
 		next.ServeHTTP(w, r)
 	})
 }
